@@ -2,15 +2,7 @@
 
 A dead-simple state management library for React.
 
-Inspired by Zustand, but with an alternative API. It's a tiny library, with a single dependency on use-sync-external-store
-
-## Why did you create this library?
-
-After having used Zustand for a while, there were a few things about the API that I found annoying:
-
--   State and actions are combined together.
-    -   Difficult to work with in TypeScript. You have to type all actions in the interface for the State.
--   Need to use a custom middleware for computed/derived state
+Inspired by Zustand. React-speicher is a tiny library, with a single dependency on use-sync-external-store.
 
 ## API
 
@@ -18,7 +10,7 @@ After having used Zustand for a while, there were a few things about the API tha
 
 Takes three arguments:
 * initialState - initial store state
-* actionsCreator - a function returning actions to mutate the store
+* actionsCreator - a function returning the actions to mutate the store
 * mapper (optional) - computes derived state
 
 ### useStore
@@ -87,3 +79,11 @@ const store = createStore(
 );
 
 ```
+
+## Why did you create this library?
+
+After React 18 was released with the useSyncExternalStore hook, it has become easy to create new state-management libraries for React.
+This library is directly inspired by Zustand, but addresses the following issues with it's API design:
+-   State and actions are combined together.
+    -   Difficult to work with in TypeScript. You have to type all the actions in the State interface.
+-   Need to use a custom middleware for computed/derived state

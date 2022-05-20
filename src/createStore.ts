@@ -32,22 +32,15 @@ export function createStore<S1, A, S2 = S1>(
     if (mapper) {
         derivedState = mapper(state);
     }
-
-    function subscribe(listener: StoreListener<S2>) {
-        listeners.add(listener);
-        return () => {
-            listeners.delete(listener);
-        };
-    }
     
     function get() {
         return state;
     }
 
-    function set(nextState: Partial<S1> | StoreSetter<S1>) {
-        let s: Partial<S1> | undefined | null;
-        if (typeof nextState === 'function') {
-            s = (nextState as StoreSetter<S1>)(state);
+    function set(nextState: Partial<S1> | StoreSetter<S1> | undefined | null) {
+        let s = nextState;
+        if (typeof s === 'function') {
+            s = s(state);
         }
 
         if (s == null || state === s) {
@@ -55,22 +48,27 @@ export function createStore<S1, A, S2 = S1>(
         }
 
         state = Object.assign({}, state, s);
-
         derivedState = state as unknown as S2;
+
         if (mapper) {
             derivedState = mapper(state);
         }
 
-        listeners.forEach((li) => li(derivedState));
+        listeners.forEach((listener) => {
+            listener(derivedState)
+        });
     }
-
-    const actions = actionsCreator({ get, set });
 
     return {
         getState() {
             return derivedState
         },
-        actions,
-        subscribe
+        actions: actionsCreator({ get, set }),
+        subscribe(listener) {
+            listeners.add(listener);
+            return () => {
+                listeners.delete(listener);
+            };
+        }
     };
 }

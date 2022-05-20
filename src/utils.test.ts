@@ -19,17 +19,9 @@ test('shallowly compares values', () => {
     expect(shallow({ a: 1 }, { a: 2 })).toBe(false);
     expect(shallow({ a: 1 }, { a: 2 })).toBe(false);
     expect(shallow({ a: 1, b: 1 }, { a: 1 })).toBe(false);
-
-    // @ts-expect-error
     expect(shallow({ a: 1 }, null)).toBe(false);
-
-    // @ts-expect-error
     expect(shallow(null, { a: 1 })).toBe(false);
-
-    // @ts-expect-error
     expect(shallow(null, null)).toBe(true);
-    
-    // @ts-expect-error
     expect(shallow(null, undefined)).toBe(false);
 });
 

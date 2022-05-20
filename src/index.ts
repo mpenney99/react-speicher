@@ -1,4 +1,4 @@
 
 export * from './createStore';
-export * from './useStore';
+export * from './useSelector';
 export * from './utils';

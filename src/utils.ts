@@ -4,16 +4,16 @@
  * @param eq - equality comparison
  * @returns 
  */
-export function memoize<T, U>(fn: (value: T) => U, eq?: (prev: T, next: T) => boolean) {
+export function memoize<T, U>(fn: (arg: T) => U, eq?: (prev: T, next: T) => boolean): (arg: T) => U {
     let prev: { value: T; computed: U } | undefined;
 
-    return (value: T) => {
-        if (!prev || !(prev.value === value || (eq && eq(prev.value, value)))) {
-            const computed = fn(value);
+    return (arg) => {
+        if (!prev || !(prev.value === arg || (eq && eq(prev.value, arg)))) {
+            const computed = fn(arg);
             if (!prev) {
-                prev = { value, computed };
+                prev = { value: arg, computed };
             } else {
-                prev.value = value;
+                prev.value = arg;
                 prev.computed = computed;
             }
         }
@@ -28,7 +28,7 @@ export function memoize<T, U>(fn: (value: T) => U, eq?: (prev: T, next: T) => bo
  * @param next 
  * @returns true if the inputs are the same
  */
-export function shallow<T extends object>(prev: T, next: T) {
+export function shallow<T>(prev: T, next: T): boolean {
     if (prev === next) {
         return true;
     }
