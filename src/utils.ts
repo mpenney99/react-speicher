@@ -1,3 +1,9 @@
+/**
+ * Wraps an expensive computation
+ * @param fn - compute function
+ * @param eq - equality comparison
+ * @returns 
+ */
 export function memoize<T, U>(fn: (value: T) => U, eq?: (prev: T, next: T) => boolean) {
     let prev: { value: T; computed: U } | undefined;
 
@@ -16,6 +22,12 @@ export function memoize<T, U>(fn: (value: T) => U, eq?: (prev: T, next: T) => bo
     };
 }
 
+/**
+ * Shallowly compares the previous and next state
+ * @param prev 
+ * @param next 
+ * @returns true if the inputs are the same
+ */
 export function shallow<T extends object>(prev: T, next: T) {
     if (prev === next) {
         return true;

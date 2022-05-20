@@ -1,35 +1,31 @@
-export type Setter<S> = (state: S) => Partial<S> | undefined | null;
+export type StoreSetter<S> = (state: S) => Partial<S> | undefined | null;
 
 export interface StoreApi<S> {
     get: () => S;
-    set: (state: Partial<S> | Setter<S>) => void;
+    set: (state: Partial<S> | StoreSetter<S>) => void;
 }
 
-export type Listener<T> = (state: T) => void;
+export type StoreListener<T> = (state: T) => void;
 
 export interface Store<S, A> {
     actions: A;
     getState(): S;
-    subscribe: (listener: Listener<S>) => () => void;
+    subscribe: (listener: StoreListener<S>) => () => void;
 }
 
-export function createStore<S, A>(
-    initialState: S,
-    actionsCreator: (api: StoreApi<S>) => A
-): Store<S, A>;
+/**
+ * Creates a store
+ * @param initialState - initial store state
+ * @param actionsCreator - function returning the actions to mutate the store
+ * @param mapper - computes derived state
+ */
 
-export function createStore<S1, A, S2>(
-    initialState: S1,
-    actionsCreator: (api: StoreApi<S1>) => A,
-    mapper: (state: S1) => S2
-): Store<S2, A>;
-
-export function createStore<S1, A, S2>(
+export function createStore<S1, A, S2 = S1>(
     initialState: S1,
     actionsCreator: (api: StoreApi<S1>) => A,
     mapper?: (state: S1) => S2
 ): Store<S2, A> {
-    const listeners = new Set<Listener<S2>>();
+    const listeners = new Set<StoreListener<S2>>();
     let state: S1 = initialState;
     let derivedState: S2 = state as unknown as S2;
 
@@ -37,7 +33,7 @@ export function createStore<S1, A, S2>(
         derivedState = mapper(state);
     }
 
-    function subscribe(listener: Listener<S2>) {
+    function subscribe(listener: StoreListener<S2>) {
         listeners.add(listener);
         return () => {
             listeners.delete(listener);
@@ -48,10 +44,10 @@ export function createStore<S1, A, S2>(
         return state;
     }
 
-    function set(nextState: Partial<S1> | Setter<S1>) {
+    function set(nextState: Partial<S1> | StoreSetter<S1>) {
         let s: Partial<S1> | undefined | null;
         if (typeof nextState === 'function') {
-            s = (nextState as Setter<S1>)(state);
+            s = (nextState as StoreSetter<S1>)(state);
         }
 
         if (s == null || state === s) {
