@@ -1,7 +1,7 @@
 {
   "name": "react-speicher",
   "version": "0.0.1",
-  "description": "A tiny state management library for React, inspired by Zustand",
+  "description": "A tiny state management library for React",
   "main": "dist/cjs/index.js",
   "module": "dist/es/index.js",
   "types": "dist/es/index.d.ts",

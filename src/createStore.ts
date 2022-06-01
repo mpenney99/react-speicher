@@ -13,9 +13,13 @@ export interface Store<S, A> {
     subscribe: (listener: StoreListener<S>) => () => void;
 }
 
+export type GetStoreState<S extends Store<unknown, unknown>> = S extends Store<infer T, unknown> ? T : never;
+
+export type GetStoreActions<S extends Store<unknown, unknown>> = S extends Store<unknown, infer A> ? A : never;
+
 /**
  * Creates a store
- * @param initialState - initial store state
+ * @param initialState - initial state
  * @param actionsCreator - function returning the actions to mutate the store
  * @param mapper - computes derived state
  */
@@ -55,7 +59,7 @@ export function createStore<S1, A, S2 = S1>(
         }
 
         listeners.forEach((listener) => {
-            listener(derivedState)
+            listener(derivedState);
         });
     }
 
