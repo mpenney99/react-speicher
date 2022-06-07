@@ -3,6 +3,7 @@ export type StoreSetter<S> = (state: S) => Partial<S> | undefined | null;
 export interface StoreApi<S> {
     get: () => S;
     set: (state: Partial<S> | StoreSetter<S>) => void;
+    batch: (callback: () => void) => void;
 }
 
 export type StoreListener<T> = (state: T) => void;
@@ -32,26 +33,14 @@ export function createStore<S1, A, S2 = S1>(
     const listeners = new Set<StoreListener<S2>>();
     let state: S1 = initialState;
     let derivedState: S2 = state as unknown as S2;
+    let batchCount = 0;
+    let needsUpdate = false;
 
     if (mapper) {
         derivedState = mapper(state);
     }
-    
-    function get() {
-        return state;
-    }
 
-    function set(nextState: Partial<S1> | StoreSetter<S1> | undefined | null) {
-        let s = nextState;
-        if (typeof s === 'function') {
-            s = s(state);
-        }
-
-        if (s == null || state === s) {
-            return;
-        }
-
-        state = Object.assign({}, state, s);
+    function update() {
         derivedState = state as unknown as S2;
 
         if (mapper) {
@@ -62,12 +51,53 @@ export function createStore<S1, A, S2 = S1>(
             listener(derivedState);
         });
     }
+    
+    function get() {
+        return state;
+    }
+
+    function set(nextState: Partial<S1> | StoreSetter<S1> | undefined | null) {
+        let s = nextState;
+        
+        if (typeof s === 'function') {
+            s = s(state);
+        }
+
+        if (s == null || state === s) {
+            return;
+        }
+
+        state = Object.assign({}, state, s);
+
+        if (batchCount > 0) {
+            needsUpdate = true;
+            return;
+        }
+
+        update();
+    }
+
+    function batch(callback: () => void) {
+        if (batchCount === 0) {
+            needsUpdate = false;
+        }
+
+        batchCount++;
+
+        callback();
+
+        batchCount--;
+
+        if (needsUpdate && batchCount === 0) {
+            update();
+        }
+    }
 
     return {
         getState() {
             return derivedState
         },
-        actions: actionsCreator({ get, set }),
+        actions: actionsCreator({ get, set, batch }),
         subscribe(listener) {
             listeners.add(listener);
             return () => {
