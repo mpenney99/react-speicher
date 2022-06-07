@@ -17,6 +17,8 @@ Takes three arguments:
 
 Hook to select the part of the store to use in your component
 
+## Utilities
+
 ### memoize
 
 Utility function to wrap an expensive computation
@@ -26,11 +28,12 @@ Utility function to wrap an expensive computation
 Utility function to shallow compare the previous and next state
 
 ## Examples
+---
 
 Basic example:
 
 ```
-import { createStore, useStore } from 'react-store';
+import { createStore, useStore } from 'react-speicher';
 
 const store = createStore(
     { counter: 0 },
@@ -56,7 +59,7 @@ function MyComponent() {
 Computed state:
 
 ```
-import { createStore, memoize } from 'react-store';
+import { createStore, memoize } from 'react-speicher';
 
 const getTotalPrice = memoize((items) => {
     return items.reduce((acc, item) => acc + item.price, 0);
