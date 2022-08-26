@@ -1,23 +1,30 @@
 import { createStore } from './createStore';
 
-test('simple store', () => {
-    const store = createStore(
-        { counter: 0 },
-        ({ set }) => ({
-            increment: () => {
-                set(({ counter }) => ({ counter: counter + 1 }));
-            }
-        })
-    );
-    
+interface CounterState {
+    counter: number;
+}
+
+function counterState(counter: number): CounterState {
+    return { counter };
+}
+
+function increment(state: CounterState): CounterState {
+    return { counter: state.counter + 1 };
+}
+
+test('updates the state', () => {
+    const store = createStore(counterState(0), ({ set }) => ({
+        increment: () => set(increment)
+    }));
+
     expect(store.getState().counter).toBe(0);
-    
+
     const fn = jest.fn();
     store.subscribe(fn);
     store.actions.increment();
 
     expect(store.getState().counter).toBe(1);
-    expect(fn).toBeCalledWith({ counter: 1 });
+    expect(fn).toBeCalledWith(counterState(1));
 });
 
 test('derived state', () => {
@@ -25,7 +32,7 @@ test('derived state', () => {
         { items: ['foo'] },
         ({ set }) => ({
             addItem: (item: string) => {
-                set(({ items }) => ({ items:[...items, item] }))
+                set(({ items }) => ({ items: [...items, item] }));
             }
         }),
         (state) => ({
@@ -44,19 +51,16 @@ test('derived state', () => {
 });
 
 test('batching', () => {
-    const store = createStore(
-        { counter: 0 },
-        ({ set, batch }) => ({
-            incrementTwice: () => {
-                batch(() => {
-                    set(({ counter }) => ({ counter: counter + 1 }));
-                    set(({ counter }) => ({ counter: counter + 1 }));
-                });
-            }
-        })
-    );
+    const store = createStore(counterState(0), ({ set, batch }) => ({
+        incrementTwice: () => {
+            batch(() => {
+                set(increment);
+                set(increment);
+            });
+        }
+    }));
 
-    expect(store.getState().counter)
+    expect(store.getState().counter);
 
     const fn = jest.fn();
     store.subscribe(fn);
@@ -64,26 +68,23 @@ test('batching', () => {
     store.actions.incrementTwice();
 
     expect(fn).toBeCalledTimes(1);
-    expect(fn).toBeCalledWith({ counter: 2 });
+    expect(fn).toBeCalledWith(counterState(2));
 });
 
 test('nested batching', () => {
-    const store = createStore(
-        { counter: 0 },
-        ({ set, batch }) => ({
-            incrementTwice: () => {
+    const store = createStore(counterState(0), ({ set, batch }) => ({
+        incrementTwice: () => {
+            batch(() => {
+                set(increment);
+                set(increment);
                 batch(() => {
-                    set(({ counter }) => ({ counter: counter + 1 }));
-                    set(({ counter }) => ({ counter: counter + 1 }));
-                    batch(() => {
-                        set(({ counter }) => ({ counter: counter + 1 }));
-                    });
+                    set(increment);
                 });
-            }
-        })
-    );
+            });
+        }
+    }));
 
-    expect(store.getState().counter)
+    expect(store.getState().counter);
 
     const fn = jest.fn();
     store.subscribe(fn);
@@ -94,3 +95,19 @@ test('nested batching', () => {
     expect(fn).toBeCalledWith({ counter: 3 });
 });
 
+test('debug listener', () => {
+    const store = createStore(counterState(0), ({ get, set }) => ({
+        increment: () => set(increment, 'INCREMENT')
+    }));
+
+    const fn = jest.fn();
+    store.debug(fn);
+
+    store.actions.increment();
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(fn).toBeCalledWith(counterState(1), counterState(0), 'INCREMENT');
+
+    store.actions.increment();
+    expect(fn).toHaveBeenCalledTimes(2);
+    expect(fn).toBeCalledWith(counterState(2), counterState(1), 'INCREMENT');
+});

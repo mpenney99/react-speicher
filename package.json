@@ -17,6 +17,7 @@
     "@babel/core": "^7.18.0",
     "@babel/preset-env": "^7.18.0",
     "@babel/preset-typescript": "^7.17.12",
+    "@redux-devtools/extension": "^3.2.3",
     "@rollup/plugin-typescript": "^8.3.2",
     "@types/jest": "^27.5.1",
     "@types/react": "^18.0.9",

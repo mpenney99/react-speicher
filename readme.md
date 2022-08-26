@@ -2,22 +2,20 @@
 
 A dead-simple state management library for React.
 
-Inspired by Zustand. React-speicher is a tiny library, with a single dependency on use-sync-external-store.
+React-speicher is a tiny library, with a single dependency on use-sync-external-store.
 
 ## API
 
 ### createStore
 
-Takes three arguments:
+Creates a new store. Takes the following arguments:
 * initialState - initial store state
-* actionsCreator - a function returning the actions to mutate the store
-* mapper (optional) - computes derived state
+* actions - actions creator
+* (optional) computed - computes derived state
 
 ### useStore
 
 Hook to select the part of the store to use in your component
-
-## Utilities
 
 ### memoize
 
@@ -25,18 +23,25 @@ Utility function to wrap an expensive computation
 
 ### shallow
 
-Utility function to shallow compare the previous and next state
+Utility function to shallowly compare the previous and next state
+
+### withDevTools
+
+Integrates the store with the redux devtools extension
 
 ## Examples
 ---
 
-Basic example:
+### Basic example
 
 ```
 import { createStore, useStore } from 'react-speicher';
 
+// create a store
 const store = createStore(
+    // initial state
     { counter: 0 },
+    // actions creator
     ({ get, set }) => ({
         increment() {
             set((state) => ({ counter: state.counter + 1 }));
@@ -44,6 +49,7 @@ const store = createStore(
     })
 );
 
+// select the part of the state to use in your component
 function MyComponent() {
     const counter = useStore(store, (state) => state.counter);
     return (
@@ -56,11 +62,12 @@ function MyComponent() {
 }
 ```
 
-Computed state:
+### Computed state
 
 ```
 import { createStore, memoize } from 'react-speicher';
 
+// expensive computation
 const getTotalPrice = memoize((items) => {
     return items.reduce((acc, item) => acc + item.price, 0);
 });
@@ -74,19 +81,42 @@ const store = createStore(
             }));
         }
     }),
+    // computed state
     (state) => ({
         ...state,
-        // expensive computation
         totalPrice: getTotalPrice(state.basket)
     })
 );
 
 ```
 
-## Why did you create this library?
+## DevTools
 
-After React 18 was released with the useSyncExternalStore hook, it has become easy to create new state-management libraries for React.
-This library is directly inspired by Zustand, but addresses the following issues with it's API design:
--   State and actions are combined together.
-    -   Difficult to work with in TypeScript. You have to type all the actions in the State interface.
--   Need to use a custom middleware for computed/derived state
+React-speicher works with the redux-devtools browser extension out of the box.
+
+To enable the integration, simply wrap your store with `withDevTools`:
+
+```
+const store = withDevTools(
+    createStore(
+        { counter: 0 },
+        ({ get, set }) => ({
+            increment: () => set(
+                (state) => ({ counter: state.counter + 1 }),
+                'INCREMENT' // <- name of the action in redux devtools
+            )
+        })
+    ),
+    // options to pass to devtools
+    { name: 'MyStore' }
+)
+```
+
+## Comparison with Zustand
+
+This library is inspired by Zustand, but has the following advantages:
+-   State and actions are separated.
+    -   Combined state and actions in Zustand means you have to provide types for the store actions. It's common that you want to explicitly type the store state, but rarer that you want to do the same for actions.
+    -   It's possible in Zustand to accidentally remove store actions by calling "replace: true". With react-speicher, actions are separate from state so this is not possible.
+-   Need to use custom middleware for computed/derived state
+-   Complex typings, especially involving middleware
